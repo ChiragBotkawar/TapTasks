@@ -83,9 +83,9 @@ export function BookCard({ book }: { book: Book }) {
               target="_blank"
               rel="noopener noreferrer"
               className="block w-fit text-xs font-medium text-amber-700 transition hover:text-amber-800 hover:underline"
-              title="Buy on Amazon"
+              title="Explore other books by Harish on Amazon"
             >
-              Buy on Amazon ↗
+              Explore other books by Harish ↗
             </a>
           )}
         </div>

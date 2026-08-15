@@ -11,15 +11,39 @@ export async function PATCH(
   }
 
   const { id } = await ctx.params;
-  const { status } = await request.json().catch(() => ({}));
+  const body = await request.json().catch(() => ({}));
 
-  if (status !== "active" && status !== "disabled") {
+  const updates: Record<string, string | null> = {};
+  for (const key of ["title", "author", "description", "amazon_link", "status"] as const) {
+    if (key in body) updates[key] = String(body[key] ?? "").trim();
+  }
+
+  if ("status" in updates && updates.status !== "active" && updates.status !== "disabled") {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  }
+
+  if ("title" in updates && !updates.title) {
+    return NextResponse.json({ error: "Title is required." }, { status: 400 });
+  }
+
+  if ("amazon_link" in updates) {
+    const link = updates.amazon_link ?? "";
+    if (link && !/^https?:\/\/.+\..+/.test(link)) {
+      return NextResponse.json(
+        { error: "Amazon link must be a valid URL starting with http:// or https://" },
+        { status: 400 }
+      );
+    }
+    updates.amazon_link = link || null;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
   }
 
   const { error } = await admin.supabase
     .from("books")
-    .update({ status })
+    .update(updates)
     .eq("id", id);
 
   if (error) {
