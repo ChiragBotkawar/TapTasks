@@ -51,15 +51,24 @@ const PageView = memo(function PageView({
     try {
       const pdfPage = await pdf.getPage(pageNumber);
       if (id !== renderId.current) return;
+      // Render at devicePixelRatio so text stays crisp on high-density (mobile)
+      // screens; cap the backing-store area so huge zooms can't blow canvas limits.
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
       const viewport = pdfPage.getViewport({ scale });
-      const w = Math.floor(viewport.width);
-      const h = Math.floor(viewport.height);
+      const maxArea = 4096 * 4096;
+      const area = viewport.width * viewport.height;
+      if (area * dpr * dpr > maxArea) dpr = Math.sqrt(maxArea / area);
+      const w = Math.floor(viewport.width * dpr);
+      const h = Math.floor(viewport.height * dpr);
       if (id !== renderId.current) return;
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const task = pdfPage.render({ canvasContext: ctx, viewport });
+      const task = pdfPage.render({
+        canvasContext: ctx,
+        viewport: pdfPage.getViewport({ scale: scale * dpr }),
+      });
       taskRef.current = task;
       await task.promise;
       if (id !== renderId.current) return;
