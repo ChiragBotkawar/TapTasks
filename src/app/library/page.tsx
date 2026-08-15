@@ -88,6 +88,68 @@ export default async function LibraryPage() {
             ))}
           </div>
         )}
+
+        <section className="animate-fade-in-up mt-12" style={{ animationDelay: "0.15s" }}>
+          <h2 className="text-lg font-semibold tracking-tight">
+            Explore other books by Harish
+          </h2>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <a
+              href="https://amzn.in/d/0gbQUaoP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-between gap-3 rounded-2xl border border-[--border] bg-white px-4 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600/30 hover:shadow-md"
+            >
+              <span className="text-sm font-medium text-stone-800 transition group-hover:text-teal-800">
+                Democracy Misunderstood: Need to Revisit our Democracy
+              </span>
+              <svg
+                className="h-3.5 w-3.5 shrink-0 text-[--muted] transition group-hover:text-teal-700"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 111.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </a>
+            <a
+              href="https://amzn.in/d/0bf5q6XX"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-between gap-3 rounded-2xl border border-[--border] bg-white px-4 py-3.5 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600/30 hover:shadow-md"
+            >
+              <span className="text-sm font-medium text-stone-800 transition group-hover:text-teal-800">
+                Roadmap to Change India
+              </span>
+              <svg
+                className="h-3.5 w-3.5 shrink-0 text-[--muted] transition group-hover:text-teal-700"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.25 5.5a.75.75 0 00-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 00.75-.75v-4a.75.75 0 111.5 0v4A2.25 2.25 0 0112.75 17h-8.5A2.25 2.25 0 012 14.75v-8.5A2.25 2.25 0 014.25 4h5a.75.75 0 010 1.5h-5z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M6.194 12.753a.75.75 0 001.06.053L16.5 4.44v2.81a.75.75 0 001.5 0v-4.5a.75.75 0 00-.75-.75h-4.5a.75.75 0 000 1.5h2.553l-9.056 8.194a.75.75 0 00-.053 1.06z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </a>
+          </div>
+        </section>
       </main>
     </div>
   );
