@@ -185,18 +185,29 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   // ---- protection: block right-click, copy, print, save, selection, screenshot ----
   useEffect(() => {
     const block = (e: Event) => e.preventDefault();
+    const showGuard = () => {
+      setGuard(true);
+      window.clearTimeout(guardTimer.current);
+      guardTimer.current = window.setTimeout(() => setGuard(false), 1200);
+    };
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       const mod = e.ctrlKey || e.metaKey;
+      // save / print / view-source / open-file
       if (mod && ["s", "p", "u", "o"].includes(k)) e.preventDefault();
+      // devtools
       if (mod && e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
-      if (e.key === "F12" || e.key === "PrintScreen") {
+      // screenshot shortcuts: Win+Shift+S, Mac Cmd+Shift+3/4/5, Cmd+Ctrl+Shift+3/4
+      if (mod && e.shiftKey && ["s", "3", "4", "5"].includes(k)) {
         e.preventDefault();
-        setGuard(true);
-        window.clearTimeout(guardTimer.current);
-        guardTimer.current = window.setTimeout(() => setGuard(false), 900);
+        showGuard();
+      }
+      if (e.key === "F12" || e.key === "F13" || e.key === "PrintScreen") {
+        e.preventDefault();
+        showGuard();
       }
     };
+    const onPageHide = () => setGuard(true);
 
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("copy", block);
@@ -204,6 +215,8 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     document.addEventListener("contextmenu", block);
     document.addEventListener("dragstart", block);
     document.addEventListener("selectstart", block);
+    document.addEventListener("beforeprint", block);
+    window.addEventListener("pagehide", onPageHide);
     return () => {
       window.clearTimeout(guardTimer.current);
       document.removeEventListener("keydown", onKeyDown);
@@ -212,6 +225,8 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
       document.removeEventListener("contextmenu", block);
       document.removeEventListener("dragstart", block);
       document.removeEventListener("selectstart", block);
+      document.removeEventListener("beforeprint", block);
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, []);
 
