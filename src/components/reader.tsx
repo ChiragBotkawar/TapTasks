@@ -142,6 +142,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   const visibleRef = useRef(new Set<number>());
   const pinch = useRef({ active: false, dist: 0, startZoom: 1 });
   const swipe = useRef({ x: 0, y: 0, active: false });
+  const guardTimer = useRef(0);
   const scrollRaf = useRef(0);
   const pendingScroll = useRef(false);
   const didInit = useRef(false);
@@ -175,7 +176,12 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
       const mod = e.ctrlKey || e.metaKey;
       if (mod && ["s", "p", "u", "o"].includes(k)) e.preventDefault();
       if (mod && e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
-      if (e.key === "F12" || e.key === "PrintScreen") e.preventDefault();
+      if (e.key === "F12" || e.key === "PrintScreen") {
+        e.preventDefault();
+        setGuard(true);
+        window.clearTimeout(guardTimer.current);
+        guardTimer.current = window.setTimeout(() => setGuard(false), 900);
+      }
     };
 
     document.addEventListener("keydown", onKeyDown);
@@ -185,6 +191,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     document.addEventListener("dragstart", block);
     document.addEventListener("selectstart", block);
     return () => {
+      window.clearTimeout(guardTimer.current);
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("copy", block);
       document.removeEventListener("cut", block);
@@ -255,8 +262,8 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
 
   // ---- fit-to-width scale (pages are self-aligned, no horizontal scroll at 100%) ----
   const scale = useMemo(() => {
-    const avail = Math.max((containerW || 0) - 32, 320);
-    const capped = Math.min(avail, 800);
+    const avail = Math.max((containerW || 0) - 32, 280);
+    const capped = Math.min(avail, 560);
     const fit = capped / (baseW || 1);
     return Math.max(0.25, fit * zoom);
   }, [containerW, zoom, baseW]);
