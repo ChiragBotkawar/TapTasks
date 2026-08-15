@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PasswordInput } from "@/components/password-input";
 
 export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
   const router = useRouter();
@@ -82,15 +83,14 @@ export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
         <label htmlFor="password" className="mb-1.5 block text-sm font-medium">
           New password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
-          required
-          minLength={8}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
           placeholder="At least 8 characters"
           autoComplete="new-password"
+          minLength={8}
+          required
           className={inputCls}
         />
       </div>
@@ -99,15 +99,14 @@ export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
         <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium">
           Confirm new password
         </label>
-        <input
+        <PasswordInput
           id="confirm"
-          type="password"
-          required
-          minLength={8}
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          onChange={setConfirm}
           placeholder="Re-enter your password"
           autoComplete="new-password"
+          minLength={8}
+          required
           className={inputCls}
         />
       </div>

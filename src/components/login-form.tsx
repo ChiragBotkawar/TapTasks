@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "@/components/password-input";
 
 export function LoginForm() {
   const router = useRouter();
@@ -302,15 +303,14 @@ export function LoginForm() {
             <label htmlFor="reg-password" className="mb-1.5 block text-sm font-medium">
               Password
             </label>
-            <input
+            <PasswordInput
               id="reg-password"
-              type="password"
-              required
-              minLength={8}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="At least 8 characters"
               autoComplete="new-password"
+              minLength={8}
+              required
               className={inputCls}
             />
           </div>
@@ -319,15 +319,14 @@ export function LoginForm() {
             <label htmlFor="reg-confirm" className="mb-1.5 block text-sm font-medium">
               Confirm password
             </label>
-            <input
+            <PasswordInput
               id="reg-confirm"
-              type="password"
-              required
-              minLength={8}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={setConfirmPassword}
               placeholder="Re-enter your password"
               autoComplete="new-password"
+              minLength={8}
+              required
               className={inputCls}
             />
           </div>
@@ -379,15 +378,14 @@ export function LoginForm() {
                 Forgot password?
               </button>
             </div>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
-              required
-              minLength={6}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="Your password"
               autoComplete="current-password"
+              minLength={6}
+              required
               className={inputCls}
             />
           </div>

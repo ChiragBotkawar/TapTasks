@@ -7,6 +7,7 @@ const src = join(
   root,
   "node_modules",
   "pdfjs-dist",
+  "legacy",
   "build",
   "pdf.worker.min.mjs"
 );

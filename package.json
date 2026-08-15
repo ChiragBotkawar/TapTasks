@@ -14,7 +14,7 @@
     "@supabase/supabase-js": "^2.112.3",
     "exceljs": "^4.4.0",
     "next": "16.3.1",
-    "pdfjs-dist": "^6.2.108",
+    "pdfjs-dist": "^4.10.38",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
@@ -27,5 +27,11 @@
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "browserslist": [
+    "chrome 85",
+    "edge 85",
+    "firefox 85",
+    "safari 14"
+  ]
 }

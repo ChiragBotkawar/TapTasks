@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import * as pdfjs from "pdfjs-dist";
+import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { Book } from "@/lib/types";
 
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
@@ -59,7 +59,7 @@ function PageView({
       canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const task = pdfPage.render({ canvasContext: ctx, canvas, viewport });
+      const task = pdfPage.render({ canvasContext: ctx, viewport });
       taskRef.current = task;
       await task.promise;
       if (id !== renderId.current) return;
@@ -477,7 +477,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   return (
     <div
       ref={containerRef}
-      className="flex h-dvh select-none flex-col overflow-hidden bg-stone-100"
+      className="flex h-screen select-none flex-col overflow-hidden bg-stone-100 supports-[height:100dvh]:h-dvh"
       style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
     >
       {/* Top bar */}
