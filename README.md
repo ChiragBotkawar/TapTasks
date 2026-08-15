@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TapTasks
 
-## Getting Started
+A private digital reading website. Readers sign in with their phone number + OTP, browse the library, and read books inside the browser. Books cannot be downloaded or printed through the normal UI, and PDFs are never exposed through a public URL.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Next.js 16** (App Router, TypeScript, Turbopack)
+- **Supabase** (Auth via phone OTP, Postgres, private Storage)
+- **Tailwind CSS**
+- **pdfjs-dist** (renders PDF pages to `<canvas>` — no native PDF viewer, no download/print chrome)
+- **exceljs** (admin Excel export)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a Supabase project.
+2. In **Authentication → Providers**, enable **Phone** and configure an SMS provider (e.g. Twilio). For local development without a provider, `supabase start` will log the OTP to the CLI console — or configure a test provider as documented by Supabase.
+3. Copy `.env.local.example` to `.env.local` and fill in:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
+   ```
 
-## Learn More
+4. Open the **SQL editor** and run the whole file at `supabase/schema.sql`. It creates:
+   - `profiles`, `books`, `reading_progress` tables with Row Level Security
+   - the private `books` storage bucket and its access policies
+5. Install and run:
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+6. Log in once with your own phone number, then promote yourself to admin:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```sql
+   update public.profiles set role = 'admin' where phone = 'YOUR_PHONE_WITH_COUNTRY_CODE';
+   ```
 
-## Deploy on Vercel
+   Reload — the **Admin** link now appears in the header.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Pages
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Route        | Purpose                                            |
+| ------------ | -------------------------------------------------- |
+| `/`          | Login (phone + OTP)                                |
+| `/library`   | Book library                                       |
+| `/reader/[id]`| Protected book reader                              |
+| `/admin`     | Admin dashboard (books + registered users)         |
+
+## Download / print protection
+
+- PDFs live in a **private** Supabase Storage bucket; there are no public URLs and nothing in `public/`.
+- The reader fetches the PDF through an authenticated route (`/api/books/[id]/pdf`) that checks the session, the book status, and streams with `Cache-Control: no-store`.
+- Pages are rendered by **pdfjs to a `<canvas>`** — no iframe, no browser PDF toolbar, no right-click "save", no print controls.
+- The reader blocks right-click, Ctrl/Cmd+S, Ctrl/Cmd+P, Ctrl/Cmd+U/O, text selection and copy/drag.
+- Backend routes verify the session and the `admin` role; RLS blocks non-admins at the database level too.
+
+> Note: no browser-based protection is absolute. A determined user with a screenshot tool can always capture the screen. The goal here is strong practical protection against normal downloading and printing.
+
+## Admin security
+
+- `/admin` and every `/api/admin/*` route require `profiles.role = 'admin'`.
+- Database RLS also limits all book/user mutations to admins, so a forged client request cannot escalate.
+
+## Notes
+
+- Reading progress is saved automatically as you turn pages, so readers resume where they left off.
+- Covers are also served through an authenticated route (the `books` bucket stays fully private).
