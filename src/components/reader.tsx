@@ -141,6 +141,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   const pages = useRef(new Map<number, HTMLElement>());
   const visibleRef = useRef(new Set<number>());
   const pinch = useRef({ active: false, dist: 0, startZoom: 1 });
+  const swipe = useRef({ x: 0, y: 0, active: false });
   const scrollRaf = useRef(0);
   const pendingScroll = useRef(false);
   const didInit = useRef(false);
@@ -316,70 +317,6 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     };
   }, [updateCurrentPage]);
 
-  // ---- pinch / wheel zoom (native listeners so preventDefault works) ----
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        pinch.current = {
-          active: true,
-          dist: Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          ),
-          startZoom: zoomRef.current,
-        };
-      }
-    };
-    const onMove = (e: TouchEvent) => {
-      if (pinch.current.active && e.touches.length === 2) {
-        e.preventDefault();
-        const d = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        setZoom(clamp(pinch.current.startZoom * (d / pinch.current.dist), 0.5, 3));
-      }
-    };
-    const onEnd = () => {
-      pinch.current.active = false;
-    };
-    const onWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        setZoom((z) => clamp(z - e.deltaY * 0.002, 0.5, 3));
-      }
-    };
-    el.addEventListener("touchstart", onStart, { passive: true });
-    el.addEventListener("touchmove", onMove, { passive: false });
-    el.addEventListener("touchend", onEnd);
-    el.addEventListener("touchcancel", onEnd);
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => {
-      el.removeEventListener("touchstart", onStart);
-      el.removeEventListener("touchmove", onMove);
-      el.removeEventListener("touchend", onEnd);
-      el.removeEventListener("touchcancel", onEnd);
-      el.removeEventListener("wheel", onWheel);
-    };
-  }, []);
-
-  // ---- fullscreen ----
-  useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      containerRef.current?.requestFullscreen().catch(() => {});
-    }
-  }, []);
-
   // ---- navigation ----
   const scrollToPage = useCallback((n: number, smooth: boolean) => {
     const scroller = scrollRef.current;
@@ -423,6 +360,93 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     return () => clearTimeout(t);
   }, [loading, numPages, page, scrollToPage]);
 
+  // ---- pinch / wheel zoom (native listeners so preventDefault works) ----
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinch.current = {
+          active: true,
+          dist: Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          ),
+          startZoom: zoomRef.current,
+        };
+        swipe.current.active = false;
+      } else if (e.touches.length === 1) {
+        swipe.current = {
+          x: e.touches[0].clientX,
+          y: e.touches[0].clientY,
+          active: true,
+        };
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (pinch.current.active && e.touches.length === 2) {
+        e.preventDefault();
+        const d = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        setZoom(clamp(pinch.current.startZoom * (d / pinch.current.dist), 0.5, 3));
+      }
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (pinch.current.active) {
+        pinch.current.active = false;
+        swipe.current.active = false;
+        return;
+      }
+      if (swipe.current.active && e.changedTouches.length === 1) {
+        const dx = e.changedTouches[0].clientX - swipe.current.x;
+        const dy = e.changedTouches[0].clientY - swipe.current.y;
+        if (
+          Math.abs(dx) > 60 &&
+          Math.abs(dx) > Math.abs(dy) * 1.5 &&
+          zoomRef.current <= 1.05
+        ) {
+          goTo(pageRef.current + (dx < 0 ? 1 : -1));
+        }
+      }
+      swipe.current.active = false;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        setZoom((z) => clamp(z - e.deltaY * 0.002, 0.5, 3));
+      }
+    };
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd);
+    el.addEventListener("touchcancel", onEnd);
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onEnd);
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, [goTo]);
+
+  // ---- fullscreen ----
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      containerRef.current?.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
   // ---- save progress (debounced) ----
   useEffect(() => {
     if (loading || page < 1) return;
@@ -446,7 +470,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   return (
     <div
       ref={containerRef}
-      className="flex h-full select-none flex-col bg-stone-100"
+      className="flex h-dvh select-none flex-col overflow-hidden bg-stone-100"
       style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
     >
       {/* Top bar */}
@@ -502,7 +526,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           onClick={() => goTo(page - 1)}
           disabled={page <= 1 || loading}
           aria-label="Previous page"
-          className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xl font-bold text-stone-700 shadow-lg backdrop-blur-sm transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+          className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-bold text-stone-700 shadow-lg ring-1 ring-black/5 transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
         >
           ‹
         </button>
@@ -510,7 +534,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           onClick={() => goTo(page + 1)}
           disabled={page >= numPages || loading}
           aria-label="Next page"
-          className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xl font-bold text-stone-700 shadow-lg backdrop-blur-sm transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+          className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-bold text-stone-700 shadow-lg ring-1 ring-black/5 transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
         >
           ›
         </button>
