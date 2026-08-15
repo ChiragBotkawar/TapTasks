@@ -1,9 +1,15 @@
 import { redirect } from "next/navigation";
 import { notFound } from "next/navigation";
+import type { Viewport } from "next";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Reader } from "@/components/reader";
 import type { Book } from "@/lib/types";
+
+export const viewport: Viewport = {
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default async function ReaderPage({
   params,
