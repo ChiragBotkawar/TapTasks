@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const siteUrl = getSiteUrl(new URL(request.url).origin);
+  const siteUrl = getSiteUrl();
   const { error } = await supabase.auth.resetPasswordForEmail(
     email.trim().toLowerCase(),
     { redirectTo: `${siteUrl}/auth/confirm-reset` }

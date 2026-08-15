@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const siteUrl = getSiteUrl(new URL(request.url).origin);
+  const siteUrl = getSiteUrl();
   const { data, error } = await supabase.auth.signUp({
     email: email.trim().toLowerCase(),
     password,
