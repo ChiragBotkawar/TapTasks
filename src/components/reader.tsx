@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import type { Book } from "@/lib/types";
@@ -26,7 +26,7 @@ function clamp(n: number, min: number, max: number) {
   return Math.min(Math.max(n, min), max);
 }
 
-function PageView({
+const PageView = memo(function PageView({
   pdf,
   pageNumber,
   scale,
@@ -133,7 +133,7 @@ function PageView({
       />
     </div>
   );
-}
+});
 
 export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -150,7 +150,6 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
   const [pdfDoc, setPdfDoc] = useState<pdfjs.PDFDocumentProxy | null>(null);
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(initialPage);
-  const [zoom, setZoom] = useState(1);
   const [baseW, setBaseW] = useState(1);
   const [containerW, setContainerW] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -163,23 +162,24 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     pageRef.current = page;
   }, [page]);
 
-  const zoomRef = useRef(zoom);
+  // Per-page zoom: each page keeps its own zoom level (1 = fit-to-width), so
+  // zooming in/out only resizes the page you're on and never shifts other pages.
+  const [pageZooms, setPageZooms] = useState<Record<number, number>>({});
+  const pageZoomsRef = useRef(pageZooms);
   useEffect(() => {
-    zoomRef.current = zoom;
-  }, [zoom]);
+    pageZoomsRef.current = pageZooms;
+  }, [pageZooms]);
 
-  // Anchors the current page in place while zooming, so zoom-in/out focuses
-  // on the page you're reading instead of letting pages shift around.
-  const pendingAnchor = useRef<number | null>(null);
+  function zoomOf(n: number): number {
+    return pageZooms[n] ?? 1;
+  }
 
   function applyZoom(next: number) {
-    const scroller = scrollRef.current;
-    const el = pages.current.get(pageRef.current);
-    if (scroller && el) {
-      pendingAnchor.current =
-        el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-    }
-    setZoom(clamp(next, 0.5, 3));
+    const pageNum = pageRef.current;
+    setPageZooms((prev) => ({
+      ...prev,
+      [pageNum]: clamp(next, 0.5, 3),
+    }));
   }
 
   // ---- protection: block right-click, copy, print, save, selection, screenshot ----
@@ -289,28 +289,16 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     return () => ro.disconnect();
   }, []);
 
-  // ---- fit-to-width scale (pages are self-aligned, no horizontal scroll at 100%) ----
-  const scale = useMemo(() => {
+  // ---- fit-to-width factor (per page: scale = fit * pageZoom) ----
+  const fit = useMemo(() => {
     const avail = Math.max((containerW || 0) - 32, 280);
     const capped = Math.min(avail, 560);
-    const fit = capped / (baseW || 1);
-    return Math.max(0.25, fit * zoom);
-  }, [containerW, zoom, baseW]);
+    return capped / (baseW || 1);
+  }, [containerW, baseW]);
 
-  // After the zoomed pages re-render, compensate the scroll so the page you're
-  // on stays at the same spot on screen.
-  useEffect(() => {
-    const scroller = scrollRef.current;
-    const el = pages.current.get(pageRef.current);
-    if (!scroller || !el || pendingAnchor.current === null) return;
-    const target = pendingAnchor.current;
-    pendingAnchor.current = null;
-    const raf = requestAnimationFrame(() => {
-      const after = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-      scroller.scrollTop += after - target;
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [scale]);
+  function scaleFor(n: number): number {
+    return Math.max(0.25, fit * zoomOf(n));
+  }
 
   const register = useCallback((el: HTMLElement, n: number) => {
     pages.current.set(n, el);
@@ -423,7 +411,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           ),
-          startZoom: zoomRef.current,
+          startZoom: pageZoomsRef.current[pageRef.current] ?? 1,
         };
         swipe.current.active = false;
       } else if (e.touches.length === 1) {
@@ -456,7 +444,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
         if (
           Math.abs(dx) > 60 &&
           Math.abs(dx) > Math.abs(dy) * 1.5 &&
-          zoomRef.current <= 1.05
+          (pageZoomsRef.current[pageRef.current] ?? 1) <= 1.05
         ) {
           goTo(pageRef.current + (dx < 0 ? 1 : -1));
         }
@@ -466,7 +454,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        applyZoom(zoomRef.current - e.deltaY * 0.002);
+        applyZoom((pageZoomsRef.current[pageRef.current] ?? 1) - e.deltaY * 0.002);
       }
     };
     el.addEventListener("touchstart", onStart, { passive: true });
@@ -562,7 +550,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
                     key={i + 1}
                     pdf={pdfDoc}
                     pageNumber={i + 1}
-                    scale={scale}
+                    scale={scaleFor(i + 1)}
                     register={register}
                     unregister={unregister}
                     onVisibility={onVisibility}
@@ -627,7 +615,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
         <div className="mx-1 h-5 w-px bg-white/10" />
 
         <button
-          onClick={() => applyZoom(zoomRef.current - 0.25)}
+          onClick={() => applyZoom(zoomOf(page) - 0.25)}
           disabled={loading}
           className={`${toolBtn} px-2.5`}
           title="Zoom out"
@@ -640,10 +628,10 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           className="w-10 rounded-lg px-0.5 text-center text-xs font-medium text-stone-300 transition hover:text-white"
           title="Fit to width"
         >
-          {Math.round(zoom * 100)}%
+          {Math.round(zoomOf(page) * 100)}%
         </button>
         <button
-          onClick={() => applyZoom(zoomRef.current + 0.25)}
+          onClick={() => applyZoom(zoomOf(page) + 0.25)}
           disabled={loading}
           className={`${toolBtn} px-2.5`}
           title="Zoom in"
