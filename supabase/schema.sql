@@ -10,12 +10,14 @@ create table if not exists public.profiles (
   email text,
   phone text,
   name text,
+  city text,
   role text not null default 'reader' check (role in ('reader', 'admin')),
   created_at timestamptz not null default now(),
   last_login timestamptz not null default now()
 );
 
 alter table public.profiles add column if not exists email text;
+alter table public.profiles add column if not exists city text;
 
 -- ---------- books ----------
 create table if not exists public.books (

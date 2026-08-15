@@ -20,8 +20,8 @@ export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
     if (password !== confirm) {
@@ -87,9 +87,9 @@ export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
           id="password"
           value={password}
           onChange={setPassword}
-          placeholder="At least 8 characters"
+          placeholder="At least 6 characters"
           autoComplete="new-password"
-          minLength={8}
+          minLength={6}
           required
           className={inputCls}
         />
@@ -105,7 +105,7 @@ export function ResetPasswordForm({ sessionReady }: { sessionReady: boolean }) {
           onChange={setConfirm}
           placeholder="Re-enter your password"
           autoComplete="new-password"
-          minLength={8}
+          minLength={6}
           required
           className={inputCls}
         />

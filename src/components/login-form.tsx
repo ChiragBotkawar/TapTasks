@@ -14,6 +14,7 @@ export function LoginForm() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [city, setCity] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -80,8 +81,9 @@ export function LoginForm() {
     if (!name.trim()) return setError("Please enter your full name.");
     const digits = phone.replace(/\D/g, "");
     if (digits.length !== 10) return setError("Phone number must be exactly 10 digits.");
+    if (!city.trim()) return setError("Please enter your city.");
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError("A valid email address is required.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    if (password.length < 6) return setError("Password must be at least 6 characters.");
     if (password !== confirmPassword) return setError("Passwords do not match.");
 
     setLoading(true);
@@ -89,7 +91,7 @@ export function LoginForm() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: digits, email: email.trim(), password }),
+        body: JSON.stringify({ name: name.trim(), phone: digits, email: email.trim(), password, city: city.trim() }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -284,6 +286,22 @@ export function LoginForm() {
           </div>
 
           <div>
+            <label htmlFor="reg-city" className="mb-1.5 block text-sm font-medium">
+              City
+            </label>
+            <input
+              id="reg-city"
+              type="text"
+              required
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Your city"
+              autoComplete="address-level2"
+              className={inputCls}
+            />
+          </div>
+
+          <div>
             <label htmlFor="reg-email" className="mb-1.5 block text-sm font-medium">
               Email
             </label>
@@ -307,9 +325,9 @@ export function LoginForm() {
               id="reg-password"
               value={password}
               onChange={setPassword}
-              placeholder="At least 8 characters"
+              placeholder="At least 6 characters"
               autoComplete="new-password"
-              minLength={8}
+              minLength={6}
               required
               className={inputCls}
             />
@@ -325,7 +343,7 @@ export function LoginForm() {
               onChange={setConfirmPassword}
               placeholder="Re-enter your password"
               autoComplete="new-password"
-              minLength={8}
+              minLength={6}
               required
               className={inputCls}
             />

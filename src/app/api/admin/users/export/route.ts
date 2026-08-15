@@ -10,7 +10,7 @@ export async function GET() {
 
   const { data: users, error } = await admin.supabase
     .from("profiles")
-    .select("id, email, phone, name, role, created_at, last_login")
+    .select("id, email, phone, name, city, role, created_at, last_login")
     .order("last_login", { ascending: false });
 
   if (error) {
@@ -24,6 +24,7 @@ export async function GET() {
     { header: "Name", key: "name", width: 24 },
     { header: "Email", key: "email", width: 30 },
     { header: "Phone Number", key: "phone", width: 22 },
+    { header: "City", key: "city", width: 18 },
     { header: "Login Date", key: "last_login", width: 26 },
     { header: "Role", key: "role", width: 12 },
   ];
@@ -35,6 +36,7 @@ export async function GET() {
       name: user.name ?? "",
       email: user.email ?? "",
       phone: user.phone ?? "",
+      city: user.city ?? "",
       last_login: user.last_login ? new Date(user.last_login).toLocaleString() : "",
       role: user.role ?? "reader",
     });

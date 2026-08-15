@@ -10,7 +10,7 @@ export async function GET() {
 
   const { data: users, error } = await admin.supabase
     .from("profiles")
-    .select("id, phone, name, role, created_at, last_login")
+    .select("id, phone, name, city, role, created_at, last_login")
     .order("last_login", { ascending: false });
 
   if (error) {

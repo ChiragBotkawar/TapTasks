@@ -5,6 +5,7 @@ export type Profile = {
   email: string | null;
   phone: string | null;
   name: string | null;
+  city: string | null;
   role: Role;
   created_at: string;
   last_login: string;

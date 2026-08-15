@@ -73,6 +73,7 @@ export function AdminUsers({ users }: { users: Profile[] }) {
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Phone Number</th>
+                <th className="px-4 py-3">City</th>
                 <th className="px-4 py-3">Login Date</th>
                 <th className="px-4 py-3">Status</th>
               </tr>
@@ -80,7 +81,7 @@ export function AdminUsers({ users }: { users: Profile[] }) {
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-[--muted]">
+                  <td colSpan={6} className="px-4 py-10 text-center text-[--muted]">
                     No users have logged in yet.
                   </td>
                 </tr>
@@ -103,6 +104,7 @@ export function AdminUsers({ users }: { users: Profile[] }) {
                     </td>
                     <td className="px-4 py-3">{user.email ?? "—"}</td>
                     <td className="px-4 py-3">{user.phone ?? "—"}</td>
+                    <td className="px-4 py-3">{user.city ?? "—"}</td>
                     <td className="px-4 py-3 text-[--muted]">
                       {user.last_login ? new Date(user.last_login).toLocaleString() : "—"}
                     </td>

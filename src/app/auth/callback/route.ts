@@ -17,12 +17,14 @@ export async function GET(request: NextRequest) {
       const name = typeof meta.name === "string" && meta.name.trim() ? meta.name.trim() : null;
       const phone =
         typeof meta.phone === "string" ? meta.phone.replace(/\D/g, "") : null;
+      const city = typeof meta.city === "string" && meta.city.trim() ? meta.city.trim() : null;
 
       await supabase.from("profiles").upsert({
         id: data.user.id,
         email: data.user.email,
         phone: phone ?? null,
         name: name ?? null,
+        city: city ?? null,
         role: "reader",
         last_login: new Date().toISOString(),
       });

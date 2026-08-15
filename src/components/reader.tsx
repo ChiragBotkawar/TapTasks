@@ -168,6 +168,20 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     zoomRef.current = zoom;
   }, [zoom]);
 
+  // Anchors the current page in place while zooming, so zoom-in/out focuses
+  // on the page you're reading instead of letting pages shift around.
+  const pendingAnchor = useRef<number | null>(null);
+
+  function applyZoom(next: number) {
+    const scroller = scrollRef.current;
+    const el = pages.current.get(pageRef.current);
+    if (scroller && el) {
+      pendingAnchor.current =
+        el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+    }
+    setZoom(clamp(next, 0.5, 3));
+  }
+
   // ---- protection: block right-click, copy, print, save, selection, screenshot ----
   useEffect(() => {
     const block = (e: Event) => e.preventDefault();
@@ -267,6 +281,21 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     const fit = capped / (baseW || 1);
     return Math.max(0.25, fit * zoom);
   }, [containerW, zoom, baseW]);
+
+  // After the zoomed pages re-render, compensate the scroll so the page you're
+  // on stays at the same spot on screen.
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const el = pages.current.get(pageRef.current);
+    if (!scroller || !el || pendingAnchor.current === null) return;
+    const target = pendingAnchor.current;
+    pendingAnchor.current = null;
+    const raf = requestAnimationFrame(() => {
+      const after = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+      scroller.scrollTop += after - target;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [scale]);
 
   const register = useCallback((el: HTMLElement, n: number) => {
     pages.current.set(n, el);
@@ -397,7 +426,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           e.touches[0].clientX - e.touches[1].clientX,
           e.touches[0].clientY - e.touches[1].clientY
         );
-        setZoom(clamp(pinch.current.startZoom * (d / pinch.current.dist), 0.5, 3));
+        applyZoom(pinch.current.startZoom * (d / pinch.current.dist));
       }
     };
     const onEnd = (e: TouchEvent) => {
@@ -422,7 +451,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
         e.preventDefault();
-        setZoom((z) => clamp(z - e.deltaY * 0.002, 0.5, 3));
+        applyZoom(zoomRef.current - e.deltaY * 0.002);
       }
     };
     el.addEventListener("touchstart", onStart, { passive: true });
@@ -583,7 +612,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
         <div className="mx-1 h-5 w-px bg-white/10" />
 
         <button
-          onClick={() => setZoom((z) => clamp(z - 0.25, 0.5, 3))}
+          onClick={() => applyZoom(zoomRef.current - 0.25)}
           disabled={loading}
           className={`${toolBtn} px-2.5`}
           title="Zoom out"
@@ -591,7 +620,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           −
         </button>
         <button
-          onClick={() => setZoom(1)}
+          onClick={() => applyZoom(1)}
           disabled={loading}
           className="w-10 rounded-lg px-0.5 text-center text-xs font-medium text-stone-300 transition hover:text-white"
           title="Fit to width"
@@ -599,7 +628,7 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
           {Math.round(zoom * 100)}%
         </button>
         <button
-          onClick={() => setZoom((z) => clamp(z + 0.25, 0.5, 3))}
+          onClick={() => applyZoom(zoomRef.current + 0.25)}
           disabled={loading}
           className={`${toolBtn} px-2.5`}
           title="Zoom in"

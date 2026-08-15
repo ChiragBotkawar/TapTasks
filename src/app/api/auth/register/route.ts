@@ -3,10 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { getSiteUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
-  const { name, phone, email, password } = await request.json().catch(() => ({}));
+  const { name, phone, email, password, city } = await request.json().catch(() => ({}));
 
   if (typeof name !== "string" || !name.trim()) {
     return NextResponse.json({ error: "Please enter your full name." }, { status: 400 });
+  }
+
+  if (typeof city !== "string" || !city.trim()) {
+    return NextResponse.json({ error: "Please enter your city." }, { status: 400 });
   }
 
   const phoneDigits = typeof phone === "string" ? phone.replace(/\D/g, "") : "";
@@ -18,8 +22,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
   }
 
-  if (typeof password !== "string" || password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+  if (typeof password !== "string" || password.length < 6) {
+    return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
     email: email.trim().toLowerCase(),
     password,
     options: {
-      data: { name: name.trim(), phone: phoneDigits },
+      data: { name: name.trim(), phone: phoneDigits, city: city.trim() },
       emailRedirectTo: `${siteUrl}/auth/callback?next=/library`,
     },
   });
@@ -54,6 +58,7 @@ export async function POST(request: NextRequest) {
       email: data.user.email,
       phone: phoneDigits,
       name: name.trim(),
+      city: city.trim(),
       role: "reader",
       last_login: new Date().toISOString(),
     });
