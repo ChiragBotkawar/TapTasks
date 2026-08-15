@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
   const { email } = await request.json().catch(() => ({}));
@@ -9,10 +10,10 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const origin = new URL(request.url).origin;
+  const siteUrl = getSiteUrl(new URL(request.url).origin);
   const { error } = await supabase.auth.resetPasswordForEmail(
     email.trim().toLowerCase(),
-    { redirectTo: `${origin}/auth/confirm-reset` }
+    { redirectTo: `${siteUrl}/auth/confirm-reset` }
   );
 
   if (error) {

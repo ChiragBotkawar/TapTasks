@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
   const { name, phone, email, password } = await request.json().catch(() => ({}));
@@ -22,13 +23,13 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const origin = new URL(request.url).origin;
+  const siteUrl = getSiteUrl(new URL(request.url).origin);
   const { data, error } = await supabase.auth.signUp({
     email: email.trim().toLowerCase(),
     password,
     options: {
       data: { name: name.trim(), phone: phoneDigits },
-      emailRedirectTo: `${origin}/auth/callback?next=/library`,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/library`,
     },
   });
 
