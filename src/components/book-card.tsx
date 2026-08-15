@@ -58,7 +58,7 @@ export function BookCard({ book }: { book: Book }) {
           {book.author ?? "Unknown author"}
         </span>
 
-        <div className="mt-auto flex items-center gap-1.5 pt-2">
+        <div className="mt-auto space-y-2 pt-2">
           <Link
             href={`/reader/${book.id}`}
             className="flex items-center gap-1 rounded-lg bg-teal-600/10 px-2.5 py-1 text-xs font-semibold text-teal-700 transition hover:bg-teal-600/20 group-hover:text-teal-800"
@@ -82,10 +82,10 @@ export function BookCard({ book }: { book: Book }) {
               href={book.amazon_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-auto flex items-center gap-1 rounded-lg bg-amber-100/80 px-2.5 py-1 text-xs font-semibold text-amber-800 transition hover:bg-amber-200"
+              className="block w-fit text-xs font-medium text-amber-700 transition hover:text-amber-800 hover:underline"
               title="Buy on Amazon"
             >
-              🛒 Buy
+              Buy on Amazon ↗
             </a>
           )}
         </div>

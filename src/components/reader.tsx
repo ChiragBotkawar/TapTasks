@@ -464,36 +464,56 @@ export function Reader({ book, initialPage, pdfUrl }: ReaderProps) {
       </div>
 
       {/* Vertical continuous scroll */}
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-auto overscroll-contain"
-        style={{ touchAction: "pan-x pan-y" }}
-      >
-        {error ? (
-          <div className="mt-16 rounded-2xl bg-red-50 px-6 py-4 text-center text-sm text-red-700">
-            {error}
-          </div>
-        ) : loading ? (
-          <div className="mt-24 flex flex-col items-center gap-2 text-sm text-[--muted]">
-            <span className="h-8 w-8 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />
-            Opening book…
-          </div>
-        ) : (
-          <div className="mx-auto flex w-max min-w-full flex-col items-center gap-5 px-4 py-6">
-            {pdfDoc &&
-              Array.from({ length: numPages }, (_, i) => (
-                <PageView
-                  key={i + 1}
-                  pdf={pdfDoc}
-                  pageNumber={i + 1}
-                  scale={scale}
-                  register={register}
-                  unregister={unregister}
-                  onVisibility={onVisibility}
-                />
-              ))}
-          </div>
-        )}
+      <div className="relative flex-1 overflow-hidden">
+        <div
+          ref={scrollRef}
+          className="h-full overflow-auto overscroll-contain"
+          style={{ touchAction: "pan-x pan-y" }}
+        >
+          {error ? (
+            <div className="mt-16 rounded-2xl bg-red-50 px-6 py-4 text-center text-sm text-red-700">
+              {error}
+            </div>
+          ) : loading ? (
+            <div className="mt-24 flex flex-col items-center gap-2 text-sm text-[--muted]">
+              <span className="h-8 w-8 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />
+              Opening book…
+            </div>
+          ) : (
+            <div className="mx-auto flex w-max min-w-full flex-col items-center gap-5 px-4 py-6">
+              {pdfDoc &&
+                Array.from({ length: numPages }, (_, i) => (
+                  <PageView
+                    key={i + 1}
+                    pdf={pdfDoc}
+                    pageNumber={i + 1}
+                    scale={scale}
+                    register={register}
+                    unregister={unregister}
+                    onVisibility={onVisibility}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Page flip arrows */}
+        <button
+          onClick={() => goTo(page - 1)}
+          disabled={page <= 1 || loading}
+          aria-label="Previous page"
+          className="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xl font-bold text-stone-700 shadow-lg backdrop-blur-sm transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+        >
+          ‹
+        </button>
+        <button
+          onClick={() => goTo(page + 1)}
+          disabled={page >= numPages || loading}
+          aria-label="Next page"
+          className="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-xl font-bold text-stone-700 shadow-lg backdrop-blur-sm transition hover:bg-white disabled:pointer-events-none disabled:opacity-0"
+        >
+          ›
+        </button>
       </div>
 
       {/* Bottom controls */}
