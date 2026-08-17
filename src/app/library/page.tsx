@@ -108,14 +108,14 @@ export default async function LibraryPage() {
           <h2 className="text-lg font-semibold tracking-tight">
             Explore other books by Harish
           </h2>
-          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-3 flex flex-wrap gap-3">
             {otherBooks.map((book) => (
               <a
                 key={book.title}
                 href={book.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`group flex flex-col items-start justify-center gap-1.5 rounded-lg px-5 py-4 ${book.bg} ${book.bgHover} text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+                className={`group flex h-44 w-44 flex-col items-center justify-center gap-1.5 rounded-lg px-3 text-center ${book.bg} ${book.bgHover} text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
               >
                 <span className="text-sm font-semibold leading-snug">
                   {book.title}
