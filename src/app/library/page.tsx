@@ -115,7 +115,7 @@ export default async function LibraryPage() {
                 href={book.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`group flex h-44 w-44 flex-col items-center justify-center gap-1.5 rounded-lg px-3 text-center ${book.bg} ${book.bgHover} text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+                className={`group flex h-52 w-52 flex-col items-center justify-center gap-1.5 rounded-lg px-3 text-center ${book.bg} ${book.bgHover} text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
               >
                 <span className="text-sm font-semibold leading-snug">
                   {book.title}
